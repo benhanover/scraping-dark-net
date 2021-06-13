@@ -1,0 +1,56 @@
+version: '3'
+services:
+  client:
+    container_name: client
+    restart: always
+    build:
+      context: ./client
+      dockerfile: ./Dockerfile
+    ports:
+      - '3000:3000'
+  server:
+    container_name: server
+    restart: always
+    build:
+      context: ./server
+      dockerfile: ./Dockerfile
+    ports:
+      - '3001:3001'
+    # prettier-ignore
+    networks:
+      - db
+  scraper:
+    container_name: scraper
+    restart: always
+    build:
+      context: ./scraper
+      dockerfile: ./Dockerfile
+    entrypoint: './wait-for-it.sh http://nzxj65x32vh2fkhk.onion/all:9050 -t 30 -- node index.js'
+    # prettier-ignore
+    networks:
+      - tor
+      - db
+  mongo:
+    container_name: mongo
+    image: mongo
+    networks:
+      - db
+  mongo-express:
+    container_name: mongo-express
+    image: mongo-express
+    restart: always
+    ports:
+      - 8081:8081
+    networks:
+      - db
+  tor:
+    container_name: tor
+    image: dperson/torproxy
+    # prettier-ignore
+    networks:
+    - tor
+networks:
+  tor:
+    driver: bridge
+  db:
+    driver: bridge
